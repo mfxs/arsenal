@@ -2,8 +2,8 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from .packages import MyDataset
-from .main import load_data, plot_pred
+from packages import MyDataset
+from main import load_data, plot_pred
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neural_network import MLPRegressor
@@ -51,7 +51,7 @@ class FcnModel(BaseEstimator, RegressorMixin):
 
     # Initialization
     def __init__(self, dim_X, dim_y, hidden_layers=(256,), n_epoch=200, batch_size=64, lr=0.001, weight_decay=0.01,
-                 step_size=50, gamma=0.5, gpu=torch.device('cuda:0'), seed=1):
+                 step_size=50, gamma=0.5, gpu=0, seed=1):
         super(FcnModel, self).__init__()
 
         # Set seed

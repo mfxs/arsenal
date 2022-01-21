@@ -3,8 +3,9 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
-from .packages import MyDataset
-from .main import load_data, plot_pred
+from packages import MyDataset
+from sklearn.metrics import r2_score
+from main import load_data, plot_pred
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.base import BaseEstimator, RegressorMixin
@@ -14,7 +15,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 class LongShortTermMemory(nn.Module):
 
     # Initialization
-    def __init__(self, dim_X, dim_y, lstm=(1024,)):
+    def __init__(self, dim_X, dim_y, lstm=(1024,), mode='mvm'):
         super(LongShortTermMemory, self).__init__()
 
         # Parameter assignment
@@ -22,6 +23,7 @@ class LongShortTermMemory(nn.Module):
         self.dim_y = dim_y
         self.net_lstm = [dim_X, ] + list(lstm)
         self.net_fc = [lstm[-1], 1]
+        self.mode = mode
 
         # Model creation
         self.lstm = nn.ModuleList()
@@ -29,7 +31,7 @@ class LongShortTermMemory(nn.Module):
         for i in range(dim_y):
             self.lstm.append(nn.ModuleList())
             for j in range(len(lstm)):
-                self.lstm[-1].append(nn.LSTM(self.net_lstm[j], self.net_lstm[j + 1]))
+                self.lstm[-1].append(nn.LSTM(self.net_lstm[j], self.net_lstm[j + 1], batch_first=True))
             self.fc.append(nn.Linear(self.net_fc[0], self.net_fc[1]))
 
     # Forward propagation
@@ -39,8 +41,13 @@ class LongShortTermMemory(nn.Module):
         for i in range(self.dim_y):
             feat = X
             for j in self.lstm[i]:
-                feat = j(feat)[0]
-            feat = self.fc[i](feat)
+                feat, _ = j(feat)
+            if self.mode == 'mvm':
+                feat = self.fc[i](feat)
+            elif self.mode == 'mvo':
+                feat = self.fc[i](_[0])
+            else:
+                raise Exception('Wrong mode selection.')
             res_list.append(feat.squeeze())
         res = torch.stack(res_list, dim=-1)
 
@@ -51,8 +58,8 @@ class LongShortTermMemory(nn.Module):
 class LstmModel(BaseEstimator, RegressorMixin):
 
     # Initialization
-    def __init__(self, dim_X, dim_y, lstm=(1024,), seq_len=30, n_epoch=200, batch_size=64, lr=0.001, weight_decay=0.1,
-                 step_size=50, gamma=0.5, gpu=torch.device('cuda:0'), seed=1):
+    def __init__(self, dim_X, dim_y, lstm=(1024,), mode='mvm', input='2D', seq_len=30, n_epoch=200, batch_size=64,
+                 lr=0.001, weight_decay=0.1, step_size=50, gamma=0.5, gpu=0, seed=1):
         super(LstmModel, self).__init__()
 
         # Set seed
@@ -62,6 +69,8 @@ class LstmModel(BaseEstimator, RegressorMixin):
         self.dim_X = dim_X
         self.dim_y = dim_y
         self.lstm = lstm
+        self.mode = mode if input == '2D' else 'mvo'
+        self.input = input
         self.seq_len = seq_len
         self.n_epoch = n_epoch
         self.batch_size = batch_size
@@ -78,31 +87,42 @@ class LstmModel(BaseEstimator, RegressorMixin):
 
         # Model creation
         self.loss_hist = []
-        self.model = LongShortTermMemory(dim_X, dim_y, lstm).to(gpu)
+        self.model = LongShortTermMemory(dim_X, dim_y, lstm, self.mode).to(gpu)
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size, gamma)
         self.criterion = nn.MSELoss(reduction='sum')
 
     # Train
     def fit(self, X, y):
-        X = self.scaler_X.fit_transform(X)
-        y = self.scaler_y.fit_transform(y)
-        X_3d = []
-        y_3d = []
-        for i in range(X.shape[0] - self.seq_len + 1):
-            X_3d.append(X[i:i + self.seq_len, :])
-            y_3d.append(y[i:i + self.seq_len, :])
-        X_3d = np.stack(X_3d, 1)
-        y_3d = np.stack(y_3d, 1)
+        if self.input == '2D':
+            X = self.scaler_X.fit_transform(X)
+            y = self.scaler_y.fit_transform(y)
+            X_3d = []
+            y_3d = []
+            for i in range(X.shape[0] - self.seq_len + 1):
+                X_3d.append(X[i:i + self.seq_len, :])
+                y_3d.append(y[i:i + self.seq_len, :])
+            X_3d = np.stack(X_3d)
+            y_3d = np.stack(y_3d)
+            if self.mode == 'mvm':
+                dataset_y = y_3d
+            elif self.mode == 'mvo':
+                dataset_y = y[self.seq_len - 1:]
+            else:
+                raise Exception('Wrong mode selection.')
+        elif self.input == '3D':
+            self.seq_len = X.shape[1]
+            X_3d = X
+            dataset_y = self.scaler_y.fit_transform(y)
+        else:
+            raise Exception('Wrong input selection.')
         dataset = MyDataset(torch.tensor(X_3d, dtype=torch.float32, device=self.gpu),
-                            torch.tensor(y_3d, dtype=torch.float32, device=self.gpu), '3D')
+                            torch.tensor(dataset_y, dtype=torch.float32, device=self.gpu))
         self.model.train()
         for i in range(self.n_epoch):
             self.loss_hist.append(0)
             data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
             for batch_X, batch_y in data_loader:
-                batch_X = batch_X.permute(1, 0, 2)
-                batch_y = batch_y.permute(1, 0, 2)
                 self.optimizer.zero_grad()
                 output = self.model(batch_X)
                 loss = self.criterion(output, batch_y)
@@ -117,10 +137,24 @@ class LstmModel(BaseEstimator, RegressorMixin):
 
     # Test
     def predict(self, X):
-        X = torch.tensor(self.scaler_X.transform(X), dtype=torch.float32, device=self.gpu).unsqueeze(1)
+        if self.input == '2D':
+            X = self.scaler_X.transform(X)
+            if self.mode == 'mvm':
+                X_3d = torch.tensor(X, dtype=torch.float32, device=self.gpu).unsqueeze(0)
+            elif self.mode == 'mvo':
+                X_3d = []
+                for i in range(X.shape[0] - self.seq_len + 1):
+                    X_3d.append(X[i:i + self.seq_len, :])
+                X_3d = torch.tensor(np.stack(X_3d), dtype=torch.float32, device=self.gpu)
+            else:
+                raise Exception('Wrong mode selection.')
+        elif self.input == '3D':
+            X_3d = torch.tensor(X, dtype=torch.float32, device=self.gpu)
+        else:
+            raise Exception('Wrong input selection.')
         self.model.eval()
         with torch.no_grad():
-            y = self.scaler_y.inverse_transform(self.model(X).cpu().numpy())
+            y = self.scaler_y.inverse_transform(self.model(X_3d).cpu().numpy())
 
         return y
 
@@ -132,14 +166,22 @@ def mainfunc():
 
     # Program by myself
     print('=====Program by myself=====')
-    mdl = LstmModel(X_train.shape[1], y_train.shape[1], (256,)).fit(X_train, y_train)
+    mdl = LstmModel(X_train.shape[1], y_train.shape[1], (256,), 'mvm').fit(X_train, y_train)
     y_fit = mdl.predict(X_train)
     y_pred = mdl.predict(X_test)
-    print('Fit: {:.4f} Pred: {:.4f}'.format(mdl.score(X_train, y_train), mdl.score(X_test, y_test)))
+    if mdl.mode == 'mvo':
+        print('Fit: {:.4f} Pred: {:.4f}'.format(r2_score(y_train[mdl.seq_len - 1:], y_fit),
+                                                r2_score(y_test[mdl.seq_len - 1:], y_pred)))
+    else:
+        print('Fit: {:.4f} Pred: {:.4f}'.format(mdl.score(X_train, y_train), mdl.score(X_test, y_test)))
 
     # Plot
-    plot_pred(y_fit, y_train, 'Train (Myself)')
-    plot_pred(y_pred, y_test, 'Test (Myself)')
+    if mdl.mode == 'mvo':
+        plot_pred(y_fit, y_train[mdl.seq_len - 1:], 'Train (Myself)')
+        plot_pred(y_pred, y_test[mdl.seq_len - 1:], 'Test (Myself)')
+    else:
+        plot_pred(y_fit, y_train, 'Train (Myself)')
+        plot_pred(y_pred, y_test, 'Test (Myself)')
 
 
 if __name__ == '__main__':

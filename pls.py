@@ -1,6 +1,6 @@
 # Partial Least Square (PLS)
 import numpy as np
-from .main import load_data, plot_pred
+from main import load_data, plot_pred
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 from sklearn.cross_decomposition import PLSRegression

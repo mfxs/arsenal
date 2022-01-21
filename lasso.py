@@ -1,7 +1,7 @@
 # Least Absolute Shrinkage and Selection Operator (LASSO)
 import cvxpy as cp
 import numpy as np
-from .main import load_data, plot_pred
+from main import load_data, plot_pred
 from sklearn.linear_model import Lasso
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import RandomizedSearchCV

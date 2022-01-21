@@ -1,6 +1,6 @@
 # Ordinary Least Square (OLS)
 import numpy as np
-from .main import load_data, plot_pred
+from main import load_data, plot_pred
 from sklearn.linear_model import LinearRegression
 from sklearn.base import BaseEstimator, RegressorMixin
 

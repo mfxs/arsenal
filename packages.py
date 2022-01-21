@@ -10,7 +10,7 @@ from sklearn.gaussian_process.kernels import RBF
 
 
 # Adjacency matrix
-def adjacency_matrix(X, mode, graph_reg=0.05, self_con=0.2, scale=0.4, epsilon=0.1, gpu=torch.device('cuda:0')):
+def adjacency_matrix(X, mode, graph_reg=0.05, self_con=0.2, scale=0.4, epsilon=0.1, gpu=0):
     # RBF kernel function
     if mode == 'rbf':
         kernel = RBF(length_scale=scale)
@@ -52,22 +52,16 @@ def adjacency_matrix(X, mode, graph_reg=0.05, self_con=0.2, scale=0.4, epsilon=0
 class MyDataset(Dataset):
 
     # Initialization
-    def __init__(self, data, label, mode='2D'):
-        self.data, self.label, self.mode = data, label, mode
+    def __init__(self, data, label):
+        self.data, self.label = data, label
 
     # Get item
     def __getitem__(self, index):
-        if self.mode == '2D':
-            return self.data[index, :], self.label[index, :]
-        elif self.mode == '3D':
-            return self.data[:, index, :], self.label[:, index, :]
+        return self.data[index], self.label[index]
 
     # Get length
     def __len__(self):
-        if self.mode == '2D':
-            return self.data.shape[0]
-        elif self.mode == '3D':
-            return self.data.shape[1]
+        return self.data.shape[0]
 
 
 # Graph convolution

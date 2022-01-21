@@ -1,6 +1,6 @@
 # Logistic Regression (LR)
 import numpy as np
-from .main import load_data, confusion
+from main import load_data, confusion
 from sklearn.linear_model import LogisticRegression
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import RandomizedSearchCV

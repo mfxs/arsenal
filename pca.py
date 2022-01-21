@@ -1,6 +1,6 @@
 # Principal Component Analysis (PCA)
 import numpy as np
-from .main import load_data, scatter
+from main import load_data, scatter
 from sklearn.decomposition import PCA
 from sklearn.base import BaseEstimator, TransformerMixin
 

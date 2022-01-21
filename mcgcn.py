@@ -3,11 +3,11 @@ import torch
 import numpy as np
 from torch import nn
 from torch import optim
-from .main import load_data, plot_pred
+from main import load_data, plot_pred
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.base import BaseEstimator, RegressorMixin
-from .packages import MyDataset, GraphConvolution, adjacency_matrix
+from packages import MyDataset, GraphConvolution, adjacency_matrix
 
 
 # Network
@@ -76,8 +76,7 @@ class McgcnModel(BaseEstimator, RegressorMixin):
 
     # Initialization
     def __init__(self, dim_X, dim_y, in_fc=(1024,), gc=(256,), out_fc=(256, 256), graph_reg=0.05, self_con=0.2,
-                 n_epoch=200, batch_size=64, lr=0.001, weight_decay=0.1, step_size=50, gamma=0.5,
-                 gpu=torch.device('cuda:0'), seed=1):
+                 n_epoch=200, batch_size=64, lr=0.001, weight_decay=0.1, step_size=50, gamma=0.5, gpu=0, seed=1):
         super(McgcnModel, self).__init__()
 
         # Set seed

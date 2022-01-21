@@ -1,22 +1,25 @@
-# This is a collection of many useful machine learning models
-# Thus, it is named 'Arsenal'
-#
-# The content of this collection is shown as below:
-# 1--Ordinary Least Square (OLS)                                                               regression
-# 2--Ridge Regression (RR)                                                                         regression
-# 3--Least Absolute Shrinkage and Selection Operator (LASSO)           regression
-# 4--Partial Least Square (PLS)                                                                   regression
-# 5--Logistic Regression (LR)                                                                      classification
-# 6--Principal Component Analysis (PCA)                                                 dimensionality reduction
-# 7--t-distributed Stochastic Neighbor Embedding (t-SNE)                   dimensionality reduction
-# 8--Fully Connected Networks (FCN)                                                       regression/classification
-# 9--Extreme Learning Machine (ELM)                                                      regression
-# 10--Long Short-Term Memory (LSTM)                                                  regression/classification
-# 11--Graph Convolutional Networks (GCN)                                            regression/classification
-# 12--Multi-Channel Graph Convolutional Networks (MC-GCN)           regression
-# 13--Graph Convolution Long Short-Term Memory (GC-LSTM)          regression
-#
-# To be continued ...
+"""
+This is a collection of many useful machine learning models
+Thus, it is named 'Arsenal'
+
+The content of this collection is shown as below:
+1--OLS: Ordinary Least Square (regression)
+2--RR: Ridge Regression (regression)
+3--LASSO: Least Absolute Shrinkage and Selection Operator (regression)
+4--PLS: Partial Least Square (regression)
+5--GPR: Gaussian Process Regression (regression)
+6--LR: Logistic Regression (classification)
+7--PCA: Principal Component Analysis (dimensionality reduction)
+8--t-SNE: t-distributed Stochastic Neighbor Embedding (dimensionality reduction)
+9--FCN: Fully Connected Networks (regression/classification)
+10--ELM: Extreme Learning Machine (regression)
+11--LSTM: Long Short-Term Memory (regression/classification)
+12--GCN: Graph Convolutional Networks (regression/classification)
+13--MC-GCN: Multi-Channel Graph Convolutional Networks (regression)
+14--GC-LSTM: Graph Convolution Long Short-Term Memory (regression)
+
+To be continued ...
+"""
 
 # Load packages
 import warnings

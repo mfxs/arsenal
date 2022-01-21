@@ -1,6 +1,6 @@
 # t-distributed Stochastic Neighbor Embedding (t-SNE)
 from sklearn.manifold import TSNE
-from .main import load_data, scatter
+from main import load_data, scatter
 
 
 # Main function

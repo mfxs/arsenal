@@ -1,7 +1,7 @@
 # Extreme Learning Machine (ELM)
 import math
 import numpy as np
-from .main import load_data, plot_pred
+from main import load_data, plot_pred
 from sklearn.base import BaseEstimator, RegressorMixin
 
 

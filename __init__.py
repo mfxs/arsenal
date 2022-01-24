@@ -1,10 +1,10 @@
 # Initialization
-__all__ = ['ols', 'rr', 'lasso', 'pls', 'gpr', 'lr', 'pca', 'tsne', 'fcn', 'elm', 'lstm', 'gcn', 'mcgcn', 'gclstm',
+__all__ = ['OLS', 'RR', 'LASSO', 'pls', 'gpr', 'lr', 'pca', 'tsne', 'fcn', 'elm', 'lstm', 'gcn', 'mcgcn', 'gclstm',
            'packages']
 
-from ols import *
-from rr import *
-from lasso import *
+from OLS import *
+from RR import *
+from LASSO import *
 from pls import *
 from gpr import *
 from lr import *

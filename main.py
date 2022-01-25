@@ -32,16 +32,24 @@ To be continued ...
 """
 
 # Load packages
+import time
+import math
+import torch
 import warnings
 import cvxpy as cp
 import numpy as np
 import seaborn as sns
+from torch import nn, optim
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
+from scipy.optimize import minimize
+from torch.nn.parameter import Parameter
+from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_diabetes, load_digits
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.gaussian_process.kernels import ConstantKernel, RBF
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.metrics import confusion_matrix, r2_score, mean_squared_error
 
 # Ignore warnings
@@ -117,3 +125,100 @@ def scatter(pc, color, title='Title'):
     plt.ylabel('Component_2')
     plt.title(title)
     plt.show()
+
+
+# Adjacency matrix
+def adjacency_matrix(X, mode, graph_reg=0.05, self_con=0.2, scale=0.4, epsilon=0.1, gpu=0):
+    # RBF kernel function
+    if mode == 'rbf':
+        kernel = RBF(length_scale=scale)
+        A = kernel(X, X)
+
+    # Pearson correlation coefficient
+    elif mode == 'pearson':
+        A = np.corrcoef(X.T)
+
+    # Sparse coding
+    elif mode == 'sc':
+        A = cp.Variable((X.shape[1], X.shape[1]))
+        term1 = cp.norm(X * A - X, p='fro')
+        term2 = cp.norm1(A)
+        constraints = []
+        for i in range(X.shape[1]):
+            constraints.append(A[i, i] == 0)
+            for j in range(X.shape[1]):
+                constraints.append(A[i, j] >= 0)
+        constraints.append(A == A.T)
+        objective = cp.Minimize(term1 + graph_reg * term2)
+        prob = cp.Problem(objective, constraints)
+        prob.solve()
+        A = A.value
+        A = A + self_con * np.eye(X.shape[1])
+
+    else:
+        raise Exception('Wrong mode selection.')
+
+    # Omit small values
+    A[np.abs(A) < epsilon] = 0
+
+    # Normalization
+    D = np.diag(np.sum(A, axis=1) ** (-0.5))
+    A = np.matmul(np.matmul(D, A), D)
+    A = torch.tensor(A, dtype=torch.float32).cuda(gpu)
+
+    return A
+
+
+# MyDataset
+class MyDataset(Dataset):
+
+    # Initialization
+    def __init__(self, data, label, gpu=0):
+        super(MyDataset, self).__init__()
+        self.gpu = gpu
+        self.data = self.__transform__(data)
+        self.label = self.__transform__(label)
+
+    # Transform
+    def __transform__(self, data):
+        return torch.tensor(data, dtype=torch.float32).cuda(self.gpu)
+
+    # Get item
+    def __getitem__(self, index):
+        return self.data[index], self.label[index]
+
+    # Get length
+    def __len__(self):
+        return self.data.shape[0]
+
+
+# Graph convolution
+class GraphConvolution(nn.Module):
+
+    # Initialization
+    def __init__(self, dim_X, dim_y, adj):
+        super(GraphConvolution, self).__init__()
+        self.dim_X = dim_X
+        self.dim_y = dim_y
+        self.adj = adj
+        self.weight = Parameter(torch.FloatTensor(dim_X, dim_y))
+        self.reset_parameters()
+
+    # Forward propagation
+    def forward(self, X):
+        res = torch.matmul(self.adj, torch.matmul(X, self.weight))
+        return res
+
+    # Weight reset
+    def reset_parameters(self):
+        stdv = 1. / math.sqrt(self.weight.size(0))
+        self.weight.data.uniform_(-stdv, stdv)
+
+
+class NeuralNetwork(BaseEstimator, RegressorMixin):
+
+    # Initialization
+    def __init__(self):
+        super(NeuralNetwork, self).__init__()
+
+    # def training(self):

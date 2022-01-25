@@ -1,11 +1,6 @@
-# Gaussian Process Regression (GPR)
-import numpy as np
-from sklearn.metrics import r2_score
-from scipy.optimize import minimize
-from main import load_data, plot_pred
-from sklearn.base import BaseEstimator, RegressorMixin
+# GPR: Gaussian Process Regression
+from main import *
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import ConstantKernel, RBF
 
 
 # Model
@@ -31,7 +26,7 @@ class GprModel(BaseEstimator, RegressorMixin):
 
         if self.optimize:
             res = minimize(negative_log_likelihood_loss, [self.params['l'], self.params['sigma']],
-                           bounds=((1e-4, 1e4), (1e-4, 1e4)), method='L-BFGS-B')
+                           bounds=((1e-4, 1e4), (1e-4, 1e4)), method='BFGS')
             self.params['l'], self.params['sigma'] = res.x[0], res.x[1]
 
         return self
@@ -56,15 +51,17 @@ class GprModel(BaseEstimator, RegressorMixin):
 
 # Main function
 def mainfunc():
+    seed = 123
+
     # Load data
-    X_train, X_test, y_train, y_test = load_data(data_type='regression')
+    X_train, X_test, y_train, y_test = load_data(data_type='regression', seed=seed)
     l_init, sigma_init = 0.5, 0.2
 
     # Program by package
     print('=====Program by package=====')
     kernel = ConstantKernel(constant_value=sigma_init, constant_value_bounds=(1e-4, 1e4)) * RBF(length_scale=l_init,
                                                                                                 length_scale_bounds=(
-                                                                                                1e-4, 1e4))
+                                                                                                    1e-4, 1e4))
     reg = GaussianProcessRegressor(kernel).fit(X_train, y_train)
     y_fit_1 = reg.predict(X_train)
     y_pred_1 = reg.predict(X_test)

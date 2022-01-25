@@ -7,7 +7,7 @@ from sklearn.linear_model import Ridge
 class RrModel(BaseEstimator, RegressorMixin):
 
     # Initialization
-    def __init__(self, alpha=1):
+    def __init__(self, alpha=1.0):
         super(RrModel, self).__init__()
         self.alpha = alpha
         self.scaler = StandardScaler()
@@ -34,10 +34,10 @@ class RrModel(BaseEstimator, RegressorMixin):
 # Main function
 def mainfunc():
     seed = 123
-    param = {'alpha': np.logspace(-4, 4, 10000)}
 
     # Load data
     X_train, X_test, y_train, y_test = load_data(data_type='regression', seed=seed)
+    param = {'alpha': np.logspace(-4, 4, 10000)}
 
     # Program by package
     print('=====Program by package=====')

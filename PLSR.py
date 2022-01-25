@@ -1,18 +1,14 @@
-# Partial Least Square (PLS)
-import numpy as np
-from main import load_data, plot_pred
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV
+# PLSR: Partial Least Square Regression
+from main import *
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.base import BaseEstimator, RegressorMixin
 
 
 # Model
-class PlsModel(BaseEstimator, RegressorMixin):
+class PlsrModel(BaseEstimator, RegressorMixin):
 
     # Initialization
     def __init__(self, n_components=2):
-        super(PlsModel, self).__init__()
+        super(PlsrModel, self).__init__()
         self.n_components = n_components
         self.scaler = StandardScaler()
 
@@ -63,8 +59,10 @@ class PlsModel(BaseEstimator, RegressorMixin):
 
 # Main function
 def mainfunc():
+    seed = 123
+
     # Load data
-    X_train, X_test, y_train, y_test = load_data(data_type='regression')
+    X_train, X_test, y_train, y_test = load_data(data_type='regression', seed=seed)
     param = {'n_components': range(2, X_train.shape[1] + 1)}
 
     # Program by package
@@ -77,7 +75,7 @@ def mainfunc():
 
     # Program by myself
     print('=====Program by myself=====')
-    mdl = GridSearchCV(PlsModel(), param, 'r2', iid=True, cv=5).fit(X_train, y_train)
+    mdl = GridSearchCV(PlsrModel(), param, 'r2', iid=True, cv=5).fit(X_train, y_train)
     y_fit_2 = mdl.predict(X_train)
     y_pred_2 = mdl.predict(X_test)
     print('Hyper-parameters: {}'.format(mdl.best_params_))

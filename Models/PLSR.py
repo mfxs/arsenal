@@ -1,5 +1,5 @@
 # PLSR: Partial Least Square Regression
-from main import *
+from Base.packages import *
 from sklearn.cross_decomposition import PLSRegression
 
 
@@ -55,38 +55,3 @@ class PlsrModel(BaseEstimator, RegressorMixin):
         y_pred = self.scaler.inverse_transform(np.matmul(np.matmul(X, self.r), self.theta))
 
         return y_pred
-
-
-# Main function
-def mainfunc():
-    seed = 123
-
-    # Load data
-    X_train, X_test, y_train, y_test = load_data(data_type='regression', seed=seed)
-    param = {'n_components': range(2, X_train.shape[1] + 1)}
-
-    # Program by package
-    print('=====Program by package=====')
-    reg = GridSearchCV(PLSRegression(), param, 'r2', iid=True, cv=5).fit(X_train, y_train)
-    y_fit_1 = reg.predict(X_train)
-    y_pred_1 = reg.predict(X_test)
-    print('Hyper-parameters: {}'.format(reg.best_params_))
-    print('Fit: {:.4f} Pred: {:.4f}\n'.format(reg.score(X_train, y_train), reg.score(X_test, y_test)))
-
-    # Program by myself
-    print('=====Program by myself=====')
-    mdl = GridSearchCV(PlsrModel(), param, 'r2', iid=True, cv=5).fit(X_train, y_train)
-    y_fit_2 = mdl.predict(X_train)
-    y_pred_2 = mdl.predict(X_test)
-    print('Hyper-parameters: {}'.format(mdl.best_params_))
-    print('Fit: {:.4f} Pred: {:.4f}'.format(mdl.score(X_train, y_train), mdl.score(X_test, y_test)))
-
-    # Plot
-    plot_pred(y_fit_1, y_train, 'Train (Package)')
-    plot_pred(y_pred_1, y_test, 'Test (Package)')
-    plot_pred(y_fit_2, y_train, 'Train (Myself)')
-    plot_pred(y_pred_2, y_test, 'Test (Myself)')
-
-
-if __name__ == '__main__':
-    mainfunc()

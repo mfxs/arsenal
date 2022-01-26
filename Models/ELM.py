@@ -1,5 +1,5 @@
 # ELM: Extreme Learning Machine
-from main import *
+from Base.packages import *
 
 
 # Model
@@ -68,27 +68,3 @@ class ElmModel(BaseEstimator, RegressorMixin):
         y = self.scaler.inverse_transform(np.stack(res_list, axis=-1))
 
         return y
-
-
-# Main function
-def mainfunc():
-    seed = 123
-
-    # Load data
-    X_train, X_test, y_train, y_test = load_data(data_type='regression', seed=seed)
-    param = {'dim_h': [1024, 512, 256], 'alpha': np.logspace(-4, 4, 10000)}
-
-    # Program by myself
-    print('=====Program by myself=====')
-    mdl = RandomizedSearchCV(ElmModel(), param, 500, 'r2', iid=True, cv=5, random_state=seed).fit(X_train, y_train)
-    y_fit = mdl.predict(X_train)
-    y_pred = mdl.predict(X_test)
-    print('Fit: {:.4f} Pred: {:.4f}'.format(mdl.score(X_train, y_train), mdl.score(X_test, y_test)))
-
-    # Plot
-    plot_pred(y_fit, y_train, 'Train (Myself)')
-    plot_pred(y_pred, y_test, 'Test (Myself)')
-
-
-if __name__ == '__main__':
-    mainfunc()

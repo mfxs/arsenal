@@ -1,31 +1,31 @@
 # Initialization
 __all__ = [
-    'OLS',
-    'RR',
-    'LASSO',
-    'PLSR',
-    'GPR',
+    'OlsModel',
+    'RrModel',
+    'LassoModel',
+    'PlsrModel',
+    'GprModel',
     'lr',
     'pca',
     'tsne',
     'fcn',
-    'ELM',
+    'ElmModel',
     'lstm',
     'gcn',
-    'MCGCN',
-    'gclstm']
+    'McgcnModel',
+    'GclstmModel']
 
-from OLS import *
-from RR import *
-from LASSO import *
-from PLSR import *
-from GPR import *
-from lr import *
-from pca import *
-from tsne import *
-from fcn import *
-from ELM import *
-from lstm import *
-from gcn import *
-from MCGCN import *
-from gclstm import *
+from Models.OLS import *
+from Models.RR import *
+from Models.LASSO import *
+from Models.PLSR import *
+from Models.GPR import *
+from Models.lr import *
+from Models.pca import *
+from Models.tsne import *
+from Models.fcn import *
+from Models.ELM import *
+from Models.lstm import *
+from Models.gcn import *
+from Models.MCGCN import *
+from Models.GCLSTM import *

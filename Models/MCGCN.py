@@ -86,10 +86,9 @@ class McgcnModel(NeuralNetwork):
     # Train
     def fit(self, X, y):
         # Data creation
-        self.data_create(X, y)
+        self.data_create(X, y, True)
 
         # Model creation
-        self.adj = adjacency_matrix(self.y, 'sc', self.args['graph_reg'], self.args['self_con'], gpu=self.args['gpu'])
         self.model = MultiChannelGraphConvolutionalNetworks(self.dim_X, self.dim_y, self.adj, self.args['in_fc'],
                                                             self.args['gc'], self.args['out_fc']).cuda(self.args['gpu'])
         self.model_create()

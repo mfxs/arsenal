@@ -94,7 +94,7 @@ class GclstmModel(NeuralNetwork):
     # Train
     def fit(self, X, y):
         # Data creation
-        self.data_create(X, y)
+        self.data_create(X, y, True)
 
         # Model creation
         self.model = GraphConvolutionLongShortTermMemory(self.dim_X, self.dim_y, self.adj, self.args['lstm'],

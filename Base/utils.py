@@ -86,15 +86,18 @@ def transform3d(X, y, seq_len=30, mode='mvo'):
 class MyDataset(Dataset):
 
     # Initialization
-    def __init__(self, data, label, gpu=0):
+    def __init__(self, data, label, prob='regression', gpu=0):
         super(MyDataset, self).__init__()
         self.gpu = gpu
         self.data = self.__transform__(data)
-        self.label = self.__transform__(label)
+        self.label = self.__transform__(label, prob)
 
     # Transform
-    def __transform__(self, data):
-        return torch.tensor(data, dtype=torch.float32).cuda(self.gpu)
+    def __transform__(self, data, prob='regression'):
+        if prob == 'regression':
+            return torch.tensor(data, dtype=torch.float32).cuda(self.gpu)
+        else:
+            return torch.tensor(data, dtype=torch.long).cuda(self.gpu)
 
     # Get item
     def __getitem__(self, index):
@@ -129,17 +132,18 @@ class GraphConvolution(nn.Module):
 
 
 # Neural network
-class NeuralNetwork(BaseEstimator, RegressorMixin):
+class NeuralNetwork(BaseEstimator):
 
     # Initialization
     def __init__(self):
         super(NeuralNetwork, self).__init__()
         self.scaler = MinMaxScaler()
         self.args = {
+            'prob': 'regression',
             'n_epoch': 200,
             'batch_size': 64,
             'lr': 0.001,
-            'weight_decay': 0.1,
+            'weight_decay': 0.01,
             'step_size': 50,
             'gamma': 0.5,
             'gpu': 0,
@@ -147,19 +151,23 @@ class NeuralNetwork(BaseEstimator, RegressorMixin):
         }
 
     # Data creation
-    def data_create(self, X, y):
-        if 'mode' in self.args.keys():
+    def data_create(self, X, y, adj=False):
+        self.dim_X = X.shape[-1]
+        if self.args['prob'] == 'regression':
             y = self.scaler.fit_transform(y)
+            self.dim_y = y.shape[-1]
+        else:
+            self.dim_y = np.unique(y).shape[0]
+        if adj:
             self.adj = adjacency_matrix(y, 'sc', self.args['graph_reg'], self.args['self_con'],
                                         gpu=self.args['gpu'])
+        if 'mode' in self.args.keys():
             self.X, self.y = transform3d(X, y, self.args['seq_len'], self.args['mode'])
         else:
             self.X = X
-            self.y = self.scaler.fit_transform(y)
-        self.dim_X = X.shape[-1]
-        self.dim_y = y.shape[-1]
+            self.y = y
 
-        self.dataset = MyDataset(self.X, self.y)
+        self.dataset = MyDataset(self.X, self.y, self.args['prob'])
         self.dataloader = DataLoader(self.dataset, batch_size=self.args['batch_size'], shuffle=True)
 
     # Model creation
@@ -167,7 +175,10 @@ class NeuralNetwork(BaseEstimator, RegressorMixin):
         self.loss_hist = np.zeros(self.args['n_epoch'])
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.args['lr'], weight_decay=self.args['weight_decay'])
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, self.args['step_size'], self.args['gamma'])
-        self.criterion = nn.MSELoss(reduction='sum')
+        if self.args['prob'] == 'regression':
+            self.criterion = nn.MSELoss(reduction='sum')
+        elif self.args['prob'] == 'classification':
+            self.criterion = nn.CrossEntropyLoss()
 
     # Network training
     def training(self):
@@ -175,6 +186,8 @@ class NeuralNetwork(BaseEstimator, RegressorMixin):
         for i in range(self.args['n_epoch']):
             start = time.time()
             for batch_X, batch_y in self.dataloader:
+                if self.args['prob'] == 'classification':
+                    batch_y = batch_y.view(-1)
                 self.optimizer.zero_grad()
                 output = self.model(batch_X)
                 loss = self.criterion(output, batch_y)
@@ -184,7 +197,6 @@ class NeuralNetwork(BaseEstimator, RegressorMixin):
             self.scheduler.step()
             end = time.time()
             print('Epoch: {}, Loss: {:.4f}, Time: {:.2f}s'.format(i + 1, self.loss_hist[i], end - start))
-        print('Optimization finished!')
 
     # Test
     def predict(self, X):
@@ -196,14 +208,20 @@ class NeuralNetwork(BaseEstimator, RegressorMixin):
         X = torch.tensor(X, dtype=torch.float32).cuda(self.args['gpu'])
         self.model.eval()
         with torch.no_grad():
-            y = self.scaler.inverse_transform(self.model(X).cpu().numpy())
+            if self.args['prob'] == 'regression':
+                y = self.scaler.inverse_transform(self.model(X).cpu().numpy())
+            else:
+                y = np.argmax(self.model(X).cpu().numpy(), 1)
 
         return y
 
     # Score
     def score(self, X, y):
         y_pred = self.predict(X)
-        r2 = r2_score(y, y_pred, multioutput='raw_values')
-        rmse = np.sqrt(mean_squared_error(y, y_pred, multioutput='raw_values'))
-
-        return {'R2': r2, 'RMSE': rmse}
+        if self.args['prob'] == 'regression':
+            r2 = r2_score(y, y_pred, multioutput='raw_values')
+            rmse = np.sqrt(mean_squared_error(y, y_pred, multioutput='raw_values'))
+            return {'R2': r2, 'RMSE': rmse}
+        elif self.args['prob'] == 'classification':
+            acc = accuracy_score(y, y_pred)
+            return {'ACC': acc}

@@ -7,15 +7,15 @@ figsize2 = (10, 10)
 dpi = 150
 
 
-# Plot the prediction curve
-def pred_curve(y_test, y_pred, title='Title', figsize=figsize1, dpi=dpi):
+# Plot the prediction curve and prediction scatter
+def curve_scatter(y_test, y_pred, title='Title', figsize1=figsize1, figsize2=figsize2, dpi=dpi):
     # Compute the performance index
     r2 = 100 * r2_score(y_test, y_pred, multioutput='raw_values')
     rmse = np.sqrt(mean_squared_error(y_test, y_pred, multioutput='raw_values'))
 
-    # Plot the prediction curve
     for i in range(y_test.shape[1]):
-        plt.figure(figsize=figsize, dpi=dpi)
+        # Plot the prediction curve
+        plt.figure(figsize=figsize1, dpi=dpi)
         plt.plot(y_test[:, i], label='Ground Truth')
         plt.plot(y_pred[:, i], label='Prediction')
         plt.xlabel('Sample')
@@ -23,18 +23,9 @@ def pred_curve(y_test, y_pred, title='Title', figsize=figsize1, dpi=dpi):
         plt.title(title + ' (QV-{}) (R2: {:.2f}%, RMSE: {:.3f})'.format(i + 1, r2[i], rmse[i]))
         plt.grid()
         plt.legend()
-    plt.show()
 
-
-# Plot the prediction scatter
-def pred_scatter(y_test, y_pred, title='Title', figsize=figsize2, dpi=dpi):
-    # Compute the performance index
-    r2 = 100 * r2_score(y_test, y_pred, multioutput='raw_values')
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred, multioutput='raw_values'))
-
-    # Plot the prediction scatter
-    for i in range(y_test.shape[1]):
-        plt.figure(figsize=figsize, dpi=dpi)
+        # Plot the prediction scatter
+        plt.figure(figsize=figsize2, dpi=dpi)
         plt.scatter(y_test[:, i], y_pred[:, i], label='Samples')
         plt.plot(y_test[:, i], y_test[:, i], 'r', label='Isoline')
         plt.xlabel('Ground Truth')
@@ -44,16 +35,24 @@ def pred_scatter(y_test, y_pred, title='Title', figsize=figsize2, dpi=dpi):
         plt.legend()
     plt.show()
 
+    return r2, rmse
+
 
 # Plot confusion matrix
 def confusion(y_test, y_pred, title='Title', figsize=figsize2, dpi=dpi):
+    # Compute the performance index
+    acc = 100 * accuracy_score(y_test, y_pred)
+
+    # Plot the confusion matrix
     cm = confusion_matrix(y_test, y_pred)
     plt.figure(figsize=figsize, dpi=dpi)
     sns.heatmap(cm, cmap='YlGnBu', annot=True, fmt='d')
     plt.xlabel('Prediction')
     plt.ylabel('Ground Truth')
-    plt.title(title)
+    plt.title(title + ' (Accuracy: {:.2f}%)'.format(acc))
     plt.show()
+
+    return acc
 
 
 # Plot scatter

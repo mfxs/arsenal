@@ -1,6 +1,5 @@
 # MC-GCN: Multi-Channel Graph Convolutional Networks
 from Base.utils import *
-from Base.packages import *
 
 
 # Network

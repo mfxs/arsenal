@@ -41,9 +41,9 @@ warnings.filterwarnings('ignore')
 
 # Parse arguments
 parser = argparse.ArgumentParser('Arsenal for machine learning')
-parser.add_argument('-prob', type=str, default='regression')
-parser.add_argument('-model', type=str, default='LSTM')
-parser.add_argument('-myself', type=bool, default=True)
+parser.add_argument('-prob', type=str, default='dimensionality reduction')
+parser.add_argument('-model', type=str, default='TSNE')
+parser.add_argument('-myself', type=bool, default=False)
 parser.add_argument('-multi_y', type=bool, default=False)
 parser.add_argument('-hpo', type=bool, default=False)
 parser.add_argument('-hpo_method', type=str, default='RS')
@@ -85,8 +85,15 @@ def mainfunc():
     else:
         print('Default params for modelling')
         model.fit(X_train, y_train)
-    y_fit = model.predict(X_train)
-    y_pred = model.predict(X_test)
+    if args.prob in ['regression', 'classification']:
+        y_fit = model.predict(X_train)
+        y_pred = model.predict(X_test)
+    elif args.prob == 'dimensionality reduction':
+        X_train_trans = model.fit_transform(X_train)
+        X_test_trans = model.fit_transform(X_test)
+    else:
+        raise Exception('Wrong problem type.')
+
     print('Modelling is finished\n')
 
     # Plot result
@@ -104,6 +111,11 @@ def mainfunc():
         acc_test = confusion(y_test, y_pred, 'Test')
         print('Fitting performance: Acc: {}'.format(acc_train))
         print('Predicting performance: Acc: {}'.format(acc_test))
+    elif args.prob == 'dimensionality reduction':
+        scatter(X_train_trans, y_train, 'Train')
+        scatter(X_test_trans, y_test, 'Test')
+    else:
+        raise Exception('Wrong problem type.')
     print('Evaluating is finished')
 
 

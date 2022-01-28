@@ -56,9 +56,9 @@ def confusion(y_test, y_pred, title='Title', figsize=figsize2, dpi=dpi):
 
 
 # Plot scatter
-def scatter(pc, color, title='Title', figsize=figsize2, dpi=dpi):
+def scatter(pc, label, title='Title', figsize=figsize2, dpi=dpi):
     plt.figure(figsize=figsize, dpi=dpi)
-    plt.scatter(pc[:, 0], pc[:, 1], c=color, cmap='tab10')
+    plt.scatter(pc[:, 0], pc[:, 1], c=label, cmap='tab10')
     plt.xlabel('Component_1')
     plt.ylabel('Component_2')
     plt.title(title)

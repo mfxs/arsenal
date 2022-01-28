@@ -7,7 +7,7 @@ def load_data(data_type='regression', test_size=0.3, seed=123, normalization=Tru
     # Regression dataset or classification dataset
     if data_type == 'regression':
         X, y = load_diabetes(return_X_y=True)
-    elif data_type == 'classification':
+    elif data_type in ['classification', 'dimensionality reduction']:
         X, y = load_digits(return_X_y=True)
     else:
         raise Exception('You have given a wrong data type.')
@@ -112,7 +112,7 @@ class MyDataset(Dataset):
 class GraphConvolution(nn.Module):
 
     # Initialization
-    def __init__(self, dim_X, dim_y, adj):
+    def __init__(self, dim_X, dim_y, adj=None):
         super(GraphConvolution, self).__init__()
         self.dim_X = dim_X
         self.dim_y = dim_y
@@ -121,8 +121,11 @@ class GraphConvolution(nn.Module):
         self.reset_parameters()
 
     # Forward propagation
-    def forward(self, X):
-        res = torch.matmul(self.adj, torch.matmul(X, self.weight))
+    def forward(self, X, adj=None):
+        if self.adj:
+            res = torch.matmul(self.adj, torch.matmul(X, self.weight))
+        else:
+            res = torch.matmul(adj, torch.matmul(X, self.weight))
         return res
 
     # Weight reset

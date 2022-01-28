@@ -1,5 +1,5 @@
 from Base.packages import *
-from Models import OLS, RR, LASSO, PLSR, GPR, ELM, MCGCN, GCLSTM, LR, FCN, LSTM
+from Models import OLS, RR, LASSO, PLSR, GPR, ELM, MCGCN, GCLSTM, LR, FCN, LSTM, GCN, PCA, TSNE
 
 model_myself = {
     'regression': {
@@ -12,14 +12,18 @@ model_myself = {
         'MCGCN': MCGCN.McgcnModel(),
         'GCLSTM': GCLSTM.GclstmModel(),
         'FCN': FCN.FcnModel(prob='regression'),
-        'LSTM': LSTM.LstmModel(prob='regression')
+        'LSTM': LSTM.LstmModel(prob='regression'),
+        'GCN': GCN.GcnModel(prob='regression')
     },
     'classification': {
         'LR': LR.LrModel(),
         'FCN': FCN.FcnModel(prob='classification'),
-        'LSTM': LSTM.LstmModel(prob='classification')
+        'LSTM': LSTM.LstmModel(prob='classification'),
+        'GCN': GCN.GcnModel(prob='classification')
     },
-    'dimensionality reduction': {}
+    'dimensionality reduction': {
+        'PCA': PCA.PcaModel()
+    }
 }
 
 model_package = {
@@ -35,7 +39,10 @@ model_package = {
         'LR': LR.LogisticRegression(),
         'FCN': FCN.MLPClassifier()
     },
-    'dimensionality reduction': {}
+    'dimensionality reduction': {
+        'PCA': PCA.PCA(),
+        'TSNE': TSNE.TSNE()
+    }
 }
 
 hyper_params = {
@@ -46,7 +53,8 @@ hyper_params = {
     'ELM': {'dim_h': [1024, 512, 256], 'alpha': np.logspace(-4, 4, 10000)},
     'LR': {'C': np.logspace(-4, 4, 10000)},
     'FCN': {'hidden_layers': ((1024,), (512,), (256,), (128,), (1024, 512), (512, 256), (256, 128))},
-    'LSTM': {'hidden_layers': ((1024,), (512,), (256,), (128,), (1024, 512), (512, 256), (256, 128))}
+    'LSTM': {'hidden_layers': ((1024,), (512,), (256,), (128,), (1024, 512), (512, 256), (256, 128))},
+    'GCN': {'hidden_layers': ((1024,), (512,), (256,), (128,), (1024, 512), (512, 256), (256, 128))}
 }
 
 hpo = {

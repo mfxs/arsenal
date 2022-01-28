@@ -1,6 +1,5 @@
 # GC-LSTM: Graph Convolution Long Short-Term Memory
 from Base.utils import *
-from Base.packages import *
 
 
 # Network

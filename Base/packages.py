@@ -18,5 +18,5 @@ from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.gaussian_process.kernels import ConstantKernel, RBF
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
-from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin, TransformerMixin
 from sklearn.metrics import confusion_matrix, r2_score, mean_squared_error, accuracy_score

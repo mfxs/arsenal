@@ -6,14 +6,19 @@ from Base.utils import *
 class GraphConvolutionalNetworks(nn.Module):
 
     # Initialization
-    def __init__(self, dim_X, dim_y, gc=(1024,), scale=0.4, prob='regression'):
+    def __init__(self, dim_X, dim_y, gc=(1024,), adj_mode='rbf', graph_reg=0.05, self_con=0.2, scale=0.4, epsilon=0.1,
+                 prob='regression'):
         super(GraphConvolutionalNetworks, self).__init__()
 
         # Parameter assignment
         self.dim_X = dim_X
         self.dim_y = dim_y
         self.net = [dim_X, ] + list(gc)
+        self.adj_mode = adj_mode
+        self.graph_reg = graph_reg
+        self.self_con = self_con
         self.scale = scale
+        self.epsilon = epsilon
         self.prob = prob
 
         # Model creation
@@ -35,7 +40,8 @@ class GraphConvolutionalNetworks(nn.Module):
 
     # Forward propagation
     def forward(self, X):
-        adj = adjacency_matrix(X.cpu().numpy(), 'rbf', scale=self.scale, gpu=X.device)
+        adj = adjacency_matrix(X.cpu().numpy(), self.adj_mode, self.graph_reg, self.self_con, self.scale, self.epsilon,
+                               X.device)
         if self.prob == 'regression':
             res_list = []
 
@@ -61,12 +67,16 @@ class GraphConvolutionalNetworks(nn.Module):
 class GcnModel(NeuralNetwork):
 
     # Initialization
-    def __init__(self, **args):
+    def __init__(self, gc=(1024,), **args):
         super(GcnModel, self).__init__()
 
         # Parameter assignment
-        self.args['gc'] = (1024,)
+        self.gc = gc
+        self.args['adj_mode'] = 'rbf'
+        self.args['graph_reg'] = 0.05
+        self.args['self_con'] = 0.2
         self.args['scale'] = 0.4
+        self.args['epsilon'] = 0.1
         self.args.update(args)
 
         # Set seed
@@ -78,9 +88,10 @@ class GcnModel(NeuralNetwork):
         self.data_create(X, y)
 
         # Model creation
-        self.model = GraphConvolutionalNetworks(self.dim_X, self.dim_y, self.args['gc'], self.args['scale'],
-                                                self.args['prob']).cuda(self.args['gpu'])
-        self.model_create()
+        self.model = GraphConvolutionalNetworks(self.dim_X, self.dim_y, self.gc, self.args['adj_mode'],
+                                                self.args['graph_reg'], self.args['self_con'], self.args['scale'],
+                                                self.args['epsilon'], self.args['prob']).cuda(self.args['gpu'])
+        self.model_create('MSE' if self.args['prob'] == 'regression' else 'CE')
 
         # Model training
         self.training()

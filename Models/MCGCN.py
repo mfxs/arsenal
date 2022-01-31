@@ -24,10 +24,10 @@ class MultiChannelGraphConvolutionalNetworks(nn.Module):
         for i in range(dim_y):
             self.in_fc.append(nn.ModuleList())
             for j in range(len(in_fc)):
-                self.in_fc[-1].append(nn.Sequential(nn.Linear(self.net_in_fc[j], self.net_in_fc[j + 1]), nn.ReLU()))
+                self.in_fc[-1].append(nn.Sequential(nn.Linear(self.net_in_fc[j], self.net_in_fc[j + 1]), self.act))
             self.out_fc.append(nn.ModuleList())
             for j in range(len(out_fc)):
-                self.out_fc[-1].append(nn.Sequential(nn.Linear(self.net_out_fc[j], self.net_out_fc[j + 1]), nn.ReLU()))
+                self.out_fc[-1].append(nn.Sequential(nn.Linear(self.net_out_fc[j], self.net_out_fc[j + 1]), self.act))
             self.out_fc[-1].append(nn.Linear(self.net_out_fc[-1], 1))
 
         # GC
@@ -75,8 +75,11 @@ class McgcnModel(NeuralNetwork):
         self.args['in_fc'] = (1024,)
         self.args['gc'] = (256,)
         self.args['out_fc'] = (256, 256)
+        self.args['adj_mode'] = 'sc'
         self.args['graph_reg'] = 0.05
         self.args['self_con'] = 0.2
+        self.args['scale'] = 0.4
+        self.args['epsilon'] = 0.1
         self.args.update(args)
 
         # Set seed

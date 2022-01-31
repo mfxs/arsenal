@@ -69,11 +69,11 @@ class LongShortTermMemory(nn.Module):
 class LstmModel(NeuralNetwork):
 
     # Initialization
-    def __init__(self, **args):
+    def __init__(self, lstm=(1024,), **args):
         super(LstmModel, self).__init__()
 
         # Parameter assignment
-        self.args['lstm'] = (1024,)
+        self.lstm = lstm
         self.args['mode'] = 'mvo'
         self.args['seq_len'] = 30
         self.args.update(args)
@@ -87,9 +87,9 @@ class LstmModel(NeuralNetwork):
         self.data_create(X, y)
 
         # Model creation
-        self.model = LongShortTermMemory(self.dim_X, self.dim_y, self.args['lstm'], self.args['mode'],
-                                         self.args['prob']).cuda(self.args['gpu'])
-        self.model_create()
+        self.model = LongShortTermMemory(self.dim_X, self.dim_y, self.lstm, self.args['mode'], self.args['prob']).cuda(
+            self.args['gpu'])
+        self.model_create('MSE' if self.args['prob'] == 'regression' else 'CE')
 
         # Model training
         self.training()

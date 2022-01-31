@@ -41,82 +41,93 @@ warnings.filterwarnings('ignore')
 
 # Parse arguments
 parser = argparse.ArgumentParser('Arsenal for machine learning')
-parser.add_argument('-prob', type=str, default='dimensionality reduction')
-parser.add_argument('-model', type=str, default='TSNE')
-parser.add_argument('-myself', type=bool, default=False)
-parser.add_argument('-multi_y', type=bool, default=False)
-parser.add_argument('-hpo', type=bool, default=False)
-parser.add_argument('-hpo_method', type=str, default='RS')
+parser.add_argument('-prob', type=str, default='regression',
+                    help='regression / classification / dimensionality-reduction')
+parser.add_argument('-normalize', type=str, default='SS', help='SS (StandardScaler) / MMS (MinMaxScaler)')
+parser.add_argument('-model', type=str, default='FCN',
+                    help='OLS / RR / LASSO / PLSR / GPR / ELM / MCGCN / GCLSTM / LR / FCN / LSTM / GCN / PCA / tSNE / AE / VAE')
+parser.add_argument('-myself', type=bool, default=False, help='model implemented by myself or package')
+parser.add_argument('-multi_y', type=bool, default=False, help='single or multiple y, only available in regression')
+parser.add_argument('-hpo', type=bool, default=False, help='whether to optimize hyper-parameters')
+parser.add_argument('-hpo_method', type=str, default='RS', help='GS (Grid Search) / RS (Random Search)')
 parser.add_argument('-seed', type=int, default=123)
 args = parser.parse_args()
 
 
+# Main function
 def mainfunc():
     # Load data
     print('=====Loading data=====')
-    X_train, X_test, y_train, y_test = load_data(args.prob, seed=args.seed)
+    X_train, X_test, y_train, y_test = load_data(args.prob, seed=args.seed, normalization=args.normalize)
     if args.prob == 'regression' and args.multi_y:
         y_train = np.concatenate((y_train, y_train ** 2, y_train ** 3), axis=1)
         y_test = np.concatenate((y_test, y_test ** 2, y_test ** 3), axis=1)
-    print('Dataset for {} problem has been loaded'.format(args.prob) + '\n')
+    print('Dataset for {} problem has been loaded.\n'.format(args.prob))
 
     # Model construction
     print('=====Constructing model=====')
-    print('{} model is selected'.format(args.model))
     if args.myself and args.model in model_myself[args.prob].keys():
         model = model_myself[args.prob][args.model]
-        print('Model by myself')
+        print('{} model by myself.'.format(args.model))
     elif not args.myself and args.model in model_package[args.prob].keys():
         model = model_package[args.prob][args.model]
-        print('Model by package')
+        print('{} model by package.'.format(args.model))
     else:
-        raise Exception('Wrong model selection')
-    if args.hpo and hyper_params[args.model]:
+        raise Exception('Wrong model selection.')
+
+    # HPO setting
+    if args.hpo and args.model in hyper_params.keys():
         if args.hpo_method == 'GS':
             model = GridSearchCV(model, hyper_params[args.model], cv=hpo['GS']['cv'])
-            print('Grid search for hpo')
+            print('Grid search for hpo.')
         elif args.hpo_method == 'RS':
-            model = RandomizedSearchCV(model, hyper_params[args.model], cv=hpo['RS']['cv'], n_iter=hpo['RS']['cv'])
-            print('Random search for hpo')
+            model = RandomizedSearchCV(model, hyper_params[args.model], cv=hpo['RS']['cv'], n_iter=hpo['RS']['cv'],
+                                       random_state=args.seed)
+            print('Random search for hpo.')
         else:
-            raise Exception('Wrong method for hpo')
+            raise Exception('Wrong method for hpo.')
         model.fit(X_train, y_train)
         print('Best hyper-params: {}'.format(model.best_params_))
     else:
-        print('Default params for modelling')
+        print('Default hyper-params for modelling.')
         model.fit(X_train, y_train)
+
+    # Model prediction
     if args.prob in ['regression', 'classification']:
         y_fit = model.predict(X_train)
         y_pred = model.predict(X_test)
-    elif args.prob == 'dimensionality reduction':
-        X_train_trans = model.fit_transform(X_train)
-        X_test_trans = model.fit_transform(X_test)
+    elif args.prob == 'dimensionality-reduction':
+        if args.model == 'tSNE':
+            X_train_trans = model.fit_transform(X_train)
+            X_test_trans = model.fit_transform(X_test)
+        else:
+            X_train_trans = model.transform(X_train)
+            X_test_trans = model.transform(X_test)
     else:
         raise Exception('Wrong problem type.')
+    print('Modelling is finished.\n')
 
-    print('Modelling is finished\n')
-
-    # Plot result
+    # Model evaluation
     print('=====Evaluating model=====')
     if args.model in ['LSTM', 'GCLSTM'] and model.args['mode'] == 'mvo':
         y_train = y_train[model.args['seq_len'] - 1:]
         y_test = y_test[model.args['seq_len'] - 1:]
     if args.prob == 'regression':
-        r2_train, rmse_train = curve_scatter(y_train, y_fit, 'Train')
-        r2_test, rmse_test = curve_scatter(y_test, y_pred, 'Test')
+        r2_train, rmse_train = curve_scatter(y_train, y_fit, '{}-Train'.format(args.model))
+        r2_test, rmse_test = curve_scatter(y_test, y_pred, '{}-Test'.format(args.model))
         print('Fitting performance: R2: {}, RMSE: {}'.format(r2_train, rmse_train))
         print('Predicting performance: R2: {}, RMSE: {}'.format(r2_test, rmse_test))
     elif args.prob == 'classification':
-        acc_train = confusion(y_train, y_fit, 'Train')
-        acc_test = confusion(y_test, y_pred, 'Test')
+        acc_train = confusion(y_train, y_fit, '{}-Train'.format(args.model))
+        acc_test = confusion(y_test, y_pred, '{}-Test'.format(args.model))
         print('Fitting performance: Acc: {}'.format(acc_train))
         print('Predicting performance: Acc: {}'.format(acc_test))
-    elif args.prob == 'dimensionality reduction':
-        scatter(X_train_trans, y_train, 'Train')
-        scatter(X_test_trans, y_test, 'Test')
+    elif args.prob == 'dimensionality-reduction':
+        scatter(X_train_trans, y_train, '{}-Train'.format(args.model))
+        scatter(X_test_trans, y_test, '{}-Test'.format(args.model))
     else:
         raise Exception('Wrong problem type.')
-    print('Evaluating is finished')
+    print('Evaluating is finished.')
 
 
 if __name__ == '__main__':

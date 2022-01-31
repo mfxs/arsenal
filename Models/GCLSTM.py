@@ -28,7 +28,7 @@ class GraphConvolutionLongShortTermMemory(nn.Module):
                 self.lstm[-1].append(nn.LSTM(self.net_lstm[j], self.net_lstm[j + 1], batch_first=True))
             self.fc.append(nn.ModuleList())
             for j in range(len(fc)):
-                self.fc[-1].append(nn.Sequential(nn.Linear(self.net_fc[j], self.net_fc[j + 1]), nn.ReLU()))
+                self.fc[-1].append(nn.Sequential(nn.Linear(self.net_fc[j], self.net_fc[j + 1]), self.act))
             self.fc[-1].append(nn.Linear(self.net_fc[-1], 1))
 
         # GC
@@ -83,8 +83,11 @@ class GclstmModel(NeuralNetwork):
         self.args['fc'] = (256, 256)
         self.args['mode'] = 'mvo'
         self.args['seq_len'] = 30
+        self.args['adj_mode'] = 'sc'
         self.args['graph_reg'] = 0.05
         self.args['self_con'] = 0.2
+        self.args['scale'] = 0.4
+        self.args['epsilon'] = 0.1
         self.args.update(args)
 
         # Set seed

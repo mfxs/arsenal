@@ -1,6 +1,8 @@
+# Some hyper-parameters for modelling
 from Base.packages import *
-from Models import OLS, RR, LASSO, PLSR, GPR, ELM, MCGCN, GCLSTM, LR, FCN, LSTM, GCN, PCA, TSNE
+from Models import OLS, RR, LASSO, PLSR, GPR, ELM, MCGCN, GCLSTM, LR, FCN, LSTM, GCN, PCA, tSNE, AE, VAE
 
+# Model implemented by myself
 model_myself = {
     'regression': {
         'OLS': OLS.OlsModel(),
@@ -21,11 +23,13 @@ model_myself = {
         'LSTM': LSTM.LstmModel(prob='classification'),
         'GCN': GCN.GcnModel(prob='classification')
     },
-    'dimensionality reduction': {
-        'PCA': PCA.PcaModel()
+    'dimensionality-reduction': {
+        'PCA': PCA.PcaModel(),
+        'AE': AE.AeModel()
     }
 }
 
+# Model implemented by package
 model_package = {
     'regression': {
         'OLS': OLS.LinearRegression(),
@@ -39,12 +43,13 @@ model_package = {
         'LR': LR.LogisticRegression(),
         'FCN': FCN.MLPClassifier()
     },
-    'dimensionality reduction': {
+    'dimensionality-reduction': {
         'PCA': PCA.PCA(),
-        'TSNE': TSNE.TSNE()
+        'tSNE': tSNE.TSNE()
     }
 }
 
+# Model hyper-parameters
 hyper_params = {
     'RR': {'alpha': np.logspace(-4, 4, 10000)},
     'LASSO': {'alpha': np.logspace(-4, 4, 10000)},
@@ -52,11 +57,12 @@ hyper_params = {
     'GPR': {'l': np.linspace(0.1, 1.0, 10), 'sigma': np.linspace(0.1, 1.0, 10)},
     'ELM': {'dim_h': [1024, 512, 256], 'alpha': np.logspace(-4, 4, 10000)},
     'LR': {'C': np.logspace(-4, 4, 10000)},
-    'FCN': {'hidden_layers': ((1024,), (512,), (256,), (128,), (1024, 512), (512, 256), (256, 128))},
+    'FCN': {'hidden_layer_sizes': ((1024,), (512,), (256,), (128,), (1024, 512), (512, 256), (256, 128))},
     'LSTM': {'hidden_layers': ((1024,), (512,), (256,), (128,), (1024, 512), (512, 256), (256, 128))},
     'GCN': {'hidden_layers': ((1024,), (512,), (256,), (128,), (1024, 512), (512, 256), (256, 128))}
 }
 
+# HPO hyper-parameters
 hpo = {
     'GS': {'cv': 5},
     'RS': {'cv': 5, 'n_iter': 100}

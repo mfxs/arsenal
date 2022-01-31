@@ -1,31 +1,37 @@
-# Load packages
+# Some functions and classes for utilization
 from Base.packages import *
 
 
 # Load dataset
-def load_data(data_type='regression', test_size=0.3, seed=123, normalization=True):
-    # Regression dataset or classification dataset
+def load_data(data_type='regression', test_size=0.3, seed=123, normalization=None):
+    # Dataset type
     if data_type == 'regression':
         X, y = load_diabetes(return_X_y=True)
-    elif data_type in ['classification', 'dimensionality reduction']:
+    elif data_type in ['classification', 'dimensionality-reduction']:
         X, y = load_digits(return_X_y=True)
     else:
-        raise Exception('You have given a wrong data type.')
+        raise Exception('Wrong data type.')
 
     # Split the dataset into train set and test set
     X_train, X_test, y_train, y_test = train_test_split(X, y.reshape(-1, 1), test_size=test_size, random_state=seed)
 
-    # Whether to normalize the dataset
-    if normalization:
+    # Normalization type
+    if normalization == 'SS':
         scaler = StandardScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
+    elif normalization == 'MMS':
+        scaler = MinMaxScaler()
+    elif normalization is None:
+        return X_train, X_test, y_train, y_test
+    else:
+        raise Exception('Wrong normalization type.')
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
 
     return X_train, X_test, y_train, y_test
 
 
 # Adjacency matrix
-def adjacency_matrix(X, mode, graph_reg=0.05, self_con=0.2, scale=0.4, epsilon=0.1, gpu=0):
+def adjacency_matrix(X, mode='sc', graph_reg=0.05, self_con=0.2, scale=0.4, epsilon=0.1, gpu=0):
     # RBF kernel function
     if mode == 'rbf':
         kernel = RBF(length_scale=scale)
@@ -78,6 +84,8 @@ def transform3d(X, y, seq_len=30, mode='mvo'):
         y_3d = y[seq_len - 1:]
     elif mode == 'mvm':
         y_3d = np.stack(y_3d)
+    else:
+        raise Exception('Wrong mode selection.')
 
     return X_3d, y_3d
 
@@ -94,7 +102,7 @@ class MyDataset(Dataset):
 
     # Transform
     def __transform__(self, data, prob='regression'):
-        if prob == 'regression':
+        if prob in ['regression', 'dimensionality-reduction']:
             return torch.tensor(data, dtype=torch.float32).cuda(self.gpu)
         else:
             return torch.tensor(data, dtype=torch.long).cuda(self.gpu)
@@ -122,10 +130,12 @@ class GraphConvolution(nn.Module):
 
     # Forward propagation
     def forward(self, X, adj=None):
-        if self.adj:
+        if self.adj is not None:
             res = torch.matmul(self.adj, torch.matmul(X, self.weight))
-        else:
+        elif adj is not None:
             res = torch.matmul(adj, torch.matmul(X, self.weight))
+        else:
+            raise Exception('No adjacency matrix available.')
         return res
 
     # Weight reset
@@ -159,31 +169,33 @@ class NeuralNetwork(BaseEstimator):
         if self.args['prob'] == 'regression':
             y = self.scaler.fit_transform(y)
             self.dim_y = y.shape[-1]
-        else:
+        elif self.args['prob'] == 'classification':
             self.dim_y = np.unique(y).shape[0]
         if adj:
-            self.adj = adjacency_matrix(y, 'sc', self.args['graph_reg'], self.args['self_con'],
-                                        gpu=self.args['gpu'])
+            self.adj = adjacency_matrix(y, self.args['adj_mode'], self.args['graph_reg'], self.args['self_con'],
+                                        self.args['scale'], self.args['epsilon'], gpu=self.args['gpu'])
         if 'mode' in self.args.keys():
             self.X, self.y = transform3d(X, y, self.args['seq_len'], self.args['mode'])
         else:
             self.X = X
             self.y = y
 
-        self.dataset = MyDataset(self.X, self.y, self.args['prob'])
+        self.dataset = MyDataset(self.X, self.y, self.args['prob'], self.args['gpu'])
         self.dataloader = DataLoader(self.dataset, batch_size=self.args['batch_size'], shuffle=True)
 
     # Model creation
-    def model_create(self):
+    def model_create(self, loss='MSE'):
         self.loss_hist = np.zeros(self.args['n_epoch'])
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.args['lr'], weight_decay=self.args['weight_decay'])
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, self.args['step_size'], self.args['gamma'])
-        if self.args['prob'] == 'regression':
+        if loss == 'MSE':
             self.criterion = nn.MSELoss(reduction='sum')
-        elif self.args['prob'] == 'classification':
+        elif loss == 'CE':
             self.criterion = nn.CrossEntropyLoss()
+        else:
+            raise Exception('Wrong loss function.')
 
-    # Network training
+    # Model training
     def training(self):
         self.model.train()
         for i in range(self.args['n_epoch']):
@@ -219,12 +231,19 @@ class NeuralNetwork(BaseEstimator):
         return y
 
     # Score
-    def score(self, X, y):
+    def score(self, X, y, index='r2'):
         y_pred = self.predict(X)
         if self.args['prob'] == 'regression':
-            r2 = r2_score(y, y_pred, multioutput='raw_values')
-            rmse = np.sqrt(mean_squared_error(y, y_pred, multioutput='raw_values'))
-            return {'R2': r2, 'RMSE': rmse}
+            if index == 'r2':
+                r2 = r2_score(y, y_pred)
+                return r2
+            elif index == 'rmse':
+                rmse = np.sqrt(mean_squared_error(y, y_pred))
+                return rmse
+            else:
+                raise Exception('Wrong index selection.')
         elif self.args['prob'] == 'classification':
             acc = accuracy_score(y, y_pred)
-            return {'ACC': acc}
+            return acc
+        else:
+            raise Exception('Wrong problem type.')

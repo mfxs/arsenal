@@ -2,20 +2,22 @@
 from Base.packages import *
 
 # Figure parameters
-figsize1 = (20, 10)
-figsize2 = (10, 10)
+figsize = ((20, 10), (10, 10))
 dpi = 150
 
 
 # Plot the prediction curve and prediction scatter
-def curve_scatter(y_test, y_pred, title='Title', figsize1=figsize1, figsize2=figsize2, dpi=dpi):
+def curve_scatter(y_test, y_pred, title='Title', figsize=figsize, dpi=dpi):
+    if len(y_pred.shape) == 1:
+        y_pred = y_pred.reshape(-1, 1)
+
     # Compute the performance index
-    r2 = 100 * r2_score(y_test, y_pred, multioutput='raw_values')
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred, multioutput='raw_values'))
+    r2 = [round(100 * _, 2) for _ in r2_score(y_test, y_pred, multioutput='raw_values')]
+    rmse = [round(np.sqrt(_), 3) for _ in mean_squared_error(y_test, y_pred, multioutput='raw_values')]
 
     for i in range(y_test.shape[1]):
         # Plot the prediction curve
-        plt.figure(figsize=figsize1, dpi=dpi)
+        plt.figure(figsize=figsize[0], dpi=dpi)
         plt.plot(y_test[:, i], label='Ground Truth')
         plt.plot(y_pred[:, i], label='Prediction')
         plt.xlabel('Sample')
@@ -25,7 +27,7 @@ def curve_scatter(y_test, y_pred, title='Title', figsize1=figsize1, figsize2=fig
         plt.legend()
 
         # Plot the prediction scatter
-        plt.figure(figsize=figsize2, dpi=dpi)
+        plt.figure(figsize=figsize[1], dpi=dpi)
         plt.scatter(y_test[:, i], y_pred[:, i], label='Samples')
         plt.plot(y_test[:, i], y_test[:, i], 'r', label='Isoline')
         plt.xlabel('Ground Truth')
@@ -39,9 +41,9 @@ def curve_scatter(y_test, y_pred, title='Title', figsize1=figsize1, figsize2=fig
 
 
 # Plot confusion matrix
-def confusion(y_test, y_pred, title='Title', figsize=figsize2, dpi=dpi):
+def confusion(y_test, y_pred, title='Title', figsize=figsize[1], dpi=dpi):
     # Compute the performance index
-    acc = 100 * accuracy_score(y_test, y_pred)
+    acc = round(100 * accuracy_score(y_test, y_pred), 2)
 
     # Plot the confusion matrix
     cm = confusion_matrix(y_test, y_pred)
@@ -56,7 +58,7 @@ def confusion(y_test, y_pred, title='Title', figsize=figsize2, dpi=dpi):
 
 
 # Plot scatter
-def scatter(pc, label, title='Title', figsize=figsize2, dpi=dpi):
+def scatter(pc, label, title='Title', figsize=figsize[1], dpi=dpi):
     plt.figure(figsize=figsize, dpi=dpi)
     plt.scatter(pc[:, 0], pc[:, 1], c=label, cmap='tab10')
     plt.xlabel('Component_1')

@@ -62,16 +62,3 @@ class AeModel(NeuralNetwork):
         self.training()
 
         return self
-
-    # Transform
-    def transform(self, X):
-        X = torch.tensor(X, dtype=torch.float32).cuda(self.args['gpu'])
-        self.model.eval()
-        with torch.no_grad():
-            y = self.model(X, transform=True).cpu().numpy()
-        return y
-
-    # Fit & Transform
-    def fit_transform(self, X, y=None):
-        self.fit(X, y)
-        return self.transform(X)

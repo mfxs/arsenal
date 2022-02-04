@@ -116,6 +116,24 @@ class MyDataset(Dataset):
         return self.data.shape[0]
 
 
+# VAE loss
+class VaeLoss(nn.Module):
+
+    # Initialization
+    def __init__(self, alpha=1.0):
+        super(VaeLoss, self).__init__()
+        self.alpha = alpha
+        self.mseloss = nn.MSELoss(reduction='sum')
+
+    # Forward propagation
+    def forward(self, output, x):
+        x_hat, mu, logvar = output
+        loss_rec = self.mseloss(x_hat, x)
+        loss_kld = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+
+        return loss_rec + self.alpha * loss_kld
+
+
 # Graph convolution
 class GraphConvolution(nn.Module):
 
@@ -192,6 +210,8 @@ class NeuralNetwork(BaseEstimator):
             self.criterion = nn.MSELoss(reduction='sum')
         elif loss == 'CE':
             self.criterion = nn.CrossEntropyLoss()
+        elif loss == 'VAE':
+            self.criterion = VaeLoss(alpha=self.args['alpha'])
         else:
             raise Exception('Wrong loss function.')
 
@@ -247,3 +267,16 @@ class NeuralNetwork(BaseEstimator):
             return acc
         else:
             raise Exception('Wrong problem type.')
+
+    # Transform
+    def transform(self, X):
+        X = torch.tensor(X, dtype=torch.float32).cuda(self.args['gpu'])
+        self.model.eval()
+        with torch.no_grad():
+            y = self.model(X, transform=True).cpu().numpy()
+        return y
+
+    # Fit & Transform
+    def fit_transform(self, X, y=None):
+        self.fit(X, y)
+        return self.transform(X)

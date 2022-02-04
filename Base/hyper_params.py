@@ -25,7 +25,8 @@ model_myself = {
     },
     'dimensionality-reduction': {
         'PCA': PCA.PcaModel(),
-        'AE': AE.AeModel()
+        'AE': AE.AeModel(),
+        'VAE': VAE.VaeModel()
     }
 }
 

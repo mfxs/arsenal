@@ -10,6 +10,7 @@ import seaborn as sns
 from torch import nn, optim
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+from torch.nn import functional as F
 from torch.nn.parameter import Parameter
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split

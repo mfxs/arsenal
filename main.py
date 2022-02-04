@@ -1,3 +1,6 @@
+# TODO: HPO for classification in FCN, LSTM and GCN
+# TODO: __init__.py
+
 """
 This is a collection of many useful machine learning models
 Thus, it is named as 'Arsenal'!
@@ -44,7 +47,7 @@ parser = argparse.ArgumentParser('Arsenal for machine learning')
 parser.add_argument('-prob', type=str, default='regression',
                     help='regression / classification / dimensionality-reduction')
 parser.add_argument('-normalize', type=str, default='SS', help='SS (StandardScaler) / MMS (MinMaxScaler)')
-parser.add_argument('-model', type=str, default='FCN',
+parser.add_argument('-model', type=str, default='OLS',
                     help='OLS / RR / LASSO / PLSR / GPR / ELM / MCGCN / GCLSTM / LR / FCN / LSTM / GCN / PCA / tSNE / AE / VAE')
 parser.add_argument('-myself', type=bool, default=False, help='model implemented by myself or package')
 parser.add_argument('-multi_y', type=bool, default=False, help='single or multiple y, only available in regression')

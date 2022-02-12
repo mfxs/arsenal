@@ -1,5 +1,4 @@
 # TODO: HPO for classification in FCN, LSTM and GCN
-# TODO: __init__.py
 
 """
 This is a collection of many useful machine learning models

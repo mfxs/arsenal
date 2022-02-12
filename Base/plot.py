@@ -1,5 +1,5 @@
 # Some plot functions
-from Base.packages import *
+from arsenal.Base.packages import *
 
 # Figure parameters
 figsize = ((20, 10), (10, 10))

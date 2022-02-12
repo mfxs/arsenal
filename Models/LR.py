@@ -1,5 +1,5 @@
 # LR: Logistic Regression
-from Base.packages import *
+from arsenal.Base.packages import *
 from sklearn.linear_model import LogisticRegression
 
 

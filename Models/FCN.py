@@ -1,5 +1,5 @@
 # FCN: Fully Connected Networks
-from Base.utils import *
+from arsenal.Base.utils import *
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 
 

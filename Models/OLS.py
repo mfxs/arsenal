@@ -1,5 +1,5 @@
 # OLS: Ordinary Least Square
-from Base.packages import *
+from arsenal.Base.packages import *
 from sklearn.linear_model import LinearRegression
 
 

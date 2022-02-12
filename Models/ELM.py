@@ -1,5 +1,5 @@
 # ELM: Extreme Learning Machine
-from Base.packages import *
+from arsenal.Base.packages import *
 
 
 # Model

@@ -1,5 +1,5 @@
 # GCN: Graph Convolutional Networks
-from Base.utils import *
+from arsenal.Base.utils import *
 
 
 # Network

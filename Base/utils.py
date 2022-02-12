@@ -1,5 +1,5 @@
 # Some functions and classes for utilization
-from Base.packages import *
+from arsenal.Base.packages import *
 
 
 # Load dataset

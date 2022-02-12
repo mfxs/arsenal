@@ -1,5 +1,5 @@
 # GPR: Gaussian Process Regression
-from Base.packages import *
+from arsenal.Base.packages import *
 from sklearn.gaussian_process import GaussianProcessRegressor
 
 

@@ -1,4 +1,7 @@
 # Initialization
-# from . import Base, Models
+__all__ = ['Base', 'Models']
+
+from arsenal import Base
+from arsenal import Models
 
 print('Welcome for using my package!')

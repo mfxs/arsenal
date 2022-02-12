@@ -1,5 +1,5 @@
 # PLSR: Partial Least Square Regression
-from Base.packages import *
+from arsenal.Base.packages import *
 from sklearn.cross_decomposition import PLSRegression
 
 

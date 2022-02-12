@@ -1,6 +1,6 @@
 # Some hyper-parameters for modelling
-from Base.packages import *
-from Models import OLS, RR, LASSO, PLSR, GPR, ELM, MCGCN, GCLSTM, LR, FCN, LSTM, GCN, PCA, tSNE, AE, VAE
+from arsenal.Base.packages import *
+from arsenal.Models import OLS, RR, LASSO, PLSR, GPR, ELM, MCGCN, GCLSTM, LR, FCN, LSTM, GCN, PCA, tSNE, AE, VAE
 
 # Model implemented by myself
 model_myself = {

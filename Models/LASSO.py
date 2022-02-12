@@ -1,5 +1,5 @@
 # LASSO: Least Absolute Shrinkage and Selection Operator
-from Base.packages import *
+from arsenal.Base.packages import *
 from sklearn.linear_model import Lasso
 
 

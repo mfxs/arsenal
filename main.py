@@ -1,6 +1,3 @@
-# TODO: HPO for classification in FCN, LSTM and GCN
-# TODO: __init__.py
-
 """
 This is a collection of many useful machine learning models
 Thus, it is named as 'Arsenal'!
@@ -51,8 +48,9 @@ parser.add_argument('-model', type=str, default='OLS',
                     help='OLS / RR / LASSO / PLSR / GPR / ELM / MCGCN / GCLSTM / LR / FCN / LSTM / GCN / PCA / tSNE / AE / VAE')
 parser.add_argument('-myself', type=bool, default=False, help='model implemented by myself or package')
 parser.add_argument('-multi_y', type=bool, default=False, help='single or multiple y, only available in regression')
+parser.add_argument('-mode', type=str, default='mvm', help='mvm or mvo')
 parser.add_argument('-hpo', type=bool, default=False, help='whether to optimize hyper-parameters')
-parser.add_argument('-hpo_method', type=str, default='RS', help='GS (Grid Search) / RS (Random Search)')
+parser.add_argument('-hpo_method', type=str, default='GS', help='GS (Grid Search) / RS (Random Search)')
 parser.add_argument('-seed', type=int, default=123)
 args = parser.parse_args()
 
@@ -77,6 +75,8 @@ def mainfunc():
         print('{} model by package.'.format(args.model))
     else:
         raise Exception('Wrong model selection.')
+    if args.model in ['LSTM', 'GCLSTM']:
+        model.set_params(mode=args.mode)
 
     # HPO setting
     if args.hpo and args.model in hyper_params.keys():
@@ -112,7 +112,7 @@ def mainfunc():
 
     # Model evaluation
     print('=====Evaluating model=====')
-    if args.model in ['LSTM', 'GCLSTM'] and model.args['mode'] == 'mvo':
+    if args.model in ['LSTM', 'GCLSTM'] and args.mode == 'mvo':
         y_train = y_train[model.args['seq_len'] - 1:]
         y_test = y_test[model.args['seq_len'] - 1:]
     if args.prob == 'regression':

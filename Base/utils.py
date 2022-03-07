@@ -170,7 +170,6 @@ class NeuralNetwork(BaseEstimator):
         super(NeuralNetwork, self).__init__()
         self.scaler = MinMaxScaler()
         self.args = {
-            'prob': 'regression',
             'n_epoch': 200,
             'batch_size': 64,
             'lr': 0.001,
@@ -184,21 +183,21 @@ class NeuralNetwork(BaseEstimator):
     # Data creation
     def data_create(self, X, y, adj=False):
         self.dim_X = X.shape[-1]
-        if self.args['prob'] == 'regression':
+        if self.prob == 'regression':
             y = self.scaler.fit_transform(y)
             self.dim_y = y.shape[-1]
-        elif self.args['prob'] == 'classification':
+        elif self.prob == 'classification':
             self.dim_y = np.unique(y).shape[0]
         if adj:
             self.adj = adjacency_matrix(y, self.args['adj_mode'], self.args['graph_reg'], self.args['self_con'],
                                         self.args['scale'], self.args['epsilon'], gpu=self.args['gpu'])
-        if 'mode' in self.args.keys():
-            self.X, self.y = transform3d(X, y, self.args['seq_len'], self.args['mode'])
+        if 'mode' in self.__dict__:
+            self.X, self.y = transform3d(X, y, self.args['seq_len'], self.mode)
         else:
             self.X = X
             self.y = y
 
-        self.dataset = MyDataset(self.X, self.y, self.args['prob'], self.args['gpu'])
+        self.dataset = MyDataset(self.X, self.y, self.prob, self.args['gpu'])
         self.dataloader = DataLoader(self.dataset, batch_size=self.args['batch_size'], shuffle=True)
 
     # Model creation
@@ -221,7 +220,7 @@ class NeuralNetwork(BaseEstimator):
         for i in range(self.args['n_epoch']):
             start = time.time()
             for batch_X, batch_y in self.dataloader:
-                if self.args['prob'] == 'classification':
+                if self.prob == 'classification':
                     batch_y = batch_y.view(-1)
                 self.optimizer.zero_grad()
                 output = self.model(batch_X)
@@ -235,15 +234,15 @@ class NeuralNetwork(BaseEstimator):
 
     # Test
     def predict(self, X):
-        if 'mode' in self.args.keys():
-            if self.args['mode'] == 'mvm':
+        if 'mode' in self.__dict__:
+            if self.mode == 'mvm':
                 X, _ = transform3d(X, X, X.shape[0])
-            elif self.args['mode'] == 'mvo':
+            elif self.mode == 'mvo':
                 X, _ = transform3d(X, X, self.args['seq_len'])
         X = torch.tensor(X, dtype=torch.float32).cuda(self.args['gpu'])
         self.model.eval()
         with torch.no_grad():
-            if self.args['prob'] == 'regression':
+            if self.prob == 'regression':
                 y = self.scaler.inverse_transform(self.model(X).cpu().numpy())
             else:
                 y = np.argmax(self.model(X).cpu().numpy(), 1)
@@ -253,7 +252,7 @@ class NeuralNetwork(BaseEstimator):
     # Score
     def score(self, X, y, index='r2'):
         y_pred = self.predict(X)
-        if self.args['prob'] == 'regression':
+        if self.prob == 'regression':
             if index == 'r2':
                 r2 = r2_score(y, y_pred)
                 return r2
@@ -262,7 +261,7 @@ class NeuralNetwork(BaseEstimator):
                 return rmse
             else:
                 raise Exception('Wrong index selection.')
-        elif self.args['prob'] == 'classification':
+        elif self.prob == 'classification':
             acc = accuracy_score(y, y_pred)
             return acc
         else:

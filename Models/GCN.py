@@ -67,11 +67,12 @@ class GraphConvolutionalNetworks(nn.Module):
 class GcnModel(NeuralNetwork):
 
     # Initialization
-    def __init__(self, gc=(1024,), **args):
+    def __init__(self, gc=(1024,), prob='regression', **args):
         super(GcnModel, self).__init__()
 
         # Parameter assignment
         self.gc = gc
+        self.prob = prob
         self.args['adj_mode'] = 'rbf'
         self.args['graph_reg'] = 0.05
         self.args['self_con'] = 0.2
@@ -90,8 +91,8 @@ class GcnModel(NeuralNetwork):
         # Model creation
         self.model = GraphConvolutionalNetworks(self.dim_X, self.dim_y, self.gc, self.args['adj_mode'],
                                                 self.args['graph_reg'], self.args['self_con'], self.args['scale'],
-                                                self.args['epsilon'], self.args['prob']).cuda(self.args['gpu'])
-        self.model_create('MSE' if self.args['prob'] == 'regression' else 'CE')
+                                                self.args['epsilon'], self.prob).cuda(self.args['gpu'])
+        self.model_create('MSE' if self.prob == 'regression' else 'CE')
 
         # Model training
         self.training()

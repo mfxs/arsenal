@@ -74,14 +74,15 @@ class GraphConvolutionLongShortTermMemory(nn.Module):
 class GclstmModel(NeuralNetwork):
 
     # Initialization
-    def __init__(self, **args):
+    def __init__(self, lstm=(1024,), gc=(256,), fc=(256, 256), mode='mvm', **args):
         super(GclstmModel, self).__init__()
 
         # Parameter assignment
-        self.args['lstm'] = (1024,)
-        self.args['gc'] = (256,)
-        self.args['fc'] = (256, 256)
-        self.args['mode'] = 'mvo'
+        self.lstm = lstm
+        self.gc = gc
+        self.fc = fc
+        self.mode = mode
+        self.prob = 'regression'
         self.args['seq_len'] = 30
         self.args['adj_mode'] = 'sc'
         self.args['graph_reg'] = 0.05
@@ -99,9 +100,8 @@ class GclstmModel(NeuralNetwork):
         self.data_create(X, y, True)
 
         # Model creation
-        self.model = GraphConvolutionLongShortTermMemory(self.dim_X, self.dim_y, self.adj, self.args['lstm'],
-                                                         self.args['gc'], self.args['fc'], self.args['mode']).cuda(
-            self.args['gpu'])
+        self.model = GraphConvolutionLongShortTermMemory(self.dim_X, self.dim_y, self.adj, self.lstm, self.gc, self.fc,
+                                                         self.mode).cuda(self.args['gpu'])
         self.model_create()
 
         # Model training

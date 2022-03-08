@@ -60,11 +60,12 @@ class FullyConnectedNetworks(nn.Module):
 class FcnModel(NeuralNetwork):
 
     # Initialization
-    def __init__(self, hidden_layer_sizes=(256,), **args):
+    def __init__(self, hidden_layer_sizes=(256,), prob='regression', **args):
         super(FcnModel, self).__init__()
 
         # Parameter assignment
         self.hidden_layer_sizes = hidden_layer_sizes
+        self.prob = prob
         self.args.update(args)
 
         # Set seed
@@ -76,9 +77,9 @@ class FcnModel(NeuralNetwork):
         self.data_create(X, y)
 
         # Model creation
-        self.model = FullyConnectedNetworks(self.dim_X, self.dim_y, self.hidden_layer_sizes, self.args['prob']).cuda(
+        self.model = FullyConnectedNetworks(self.dim_X, self.dim_y, self.hidden_layer_sizes, self.prob).cuda(
             self.args['gpu'])
-        self.model_create('MSE' if self.args['prob'] == 'regression' else 'CE')
+        self.model_create('MSE' if self.prob == 'regression' else 'CE')
 
         # Model training
         self.training()

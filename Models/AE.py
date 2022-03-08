@@ -43,7 +43,7 @@ class AeModel(NeuralNetwork):
 
         # Parameter assignment
         self.args['hidden_layers'] = (256, 128, 2)
-        self.args['prob'] = 'dimensionality-reduction'
+        self.prob = 'dimensionality-reduction'
         self.args.update(args)
 
         # Set seed

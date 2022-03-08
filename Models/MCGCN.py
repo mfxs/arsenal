@@ -68,13 +68,14 @@ class MultiChannelGraphConvolutionalNetworks(nn.Module):
 class McgcnModel(NeuralNetwork):
 
     # Initialization
-    def __init__(self, **args):
+    def __init__(self, in_fc=(1024,), gc=(256,), out_fc=(256, 256), **args):
         super(McgcnModel, self).__init__()
 
         # Parameter assignment
-        self.args['in_fc'] = (1024,)
-        self.args['gc'] = (256,)
-        self.args['out_fc'] = (256, 256)
+        self.in_fc = in_fc
+        self.gc = gc
+        self.out_fc = out_fc
+        self.prob = 'regression'
         self.args['adj_mode'] = 'sc'
         self.args['graph_reg'] = 0.05
         self.args['self_con'] = 0.2
@@ -91,8 +92,8 @@ class McgcnModel(NeuralNetwork):
         self.data_create(X, y, True)
 
         # Model creation
-        self.model = MultiChannelGraphConvolutionalNetworks(self.dim_X, self.dim_y, self.adj, self.args['in_fc'],
-                                                            self.args['gc'], self.args['out_fc']).cuda(self.args['gpu'])
+        self.model = MultiChannelGraphConvolutionalNetworks(self.dim_X, self.dim_y, self.adj, self.in_fc, self.gc,
+                                                            self.out_fc).cuda(self.args['gpu'])
         self.model_create()
 
         # Model training

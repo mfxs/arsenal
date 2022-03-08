@@ -68,7 +68,7 @@ class VaeModel(NeuralNetwork):
         self.args['dim_z'] = 2
         self.args['hidden_layers'] = (256, 128)
         self.args['alpha'] = 1.0
-        self.args['prob'] = 'dimensionality-reduction'
+        self.prob = 'dimensionality-reduction'
         self.args.update()
 
         # Set seed
